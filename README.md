@@ -15,7 +15,14 @@ $ sudo -i docker run --net=bridge -h rl8 -it --rm rockylinux:8
 [rl8]# rpm -Uvh "google-chrome-stable_${ver}_x86_64.rpm" 2>&1 \
   | grep need \
   | sed 's/(.*//' | awk '{print $1}' | while read -r need; do
-    p=$( dnf whatprovides "${need}" | grep " : " | grep el8 | head -1 | awk '{print $1}' | sed 's/-[0-9\.:-]\+\.el8.*//' );
+    p=$(
+      dnf whatprovides "${need}" \
+      | grep " : " \
+      | grep el8 \
+      | head -1 \
+      | awk '{print $1}' \
+      | sed 's/-[0-9\.:-]\+\.el8.*//' \
+    );
     echo >&2 "${p}";
     echo "${p}";
   done \
