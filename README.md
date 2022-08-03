@@ -1,6 +1,7 @@
+## 実行サンプル
 
 ```sh
-$ sudo -i docker run --net=bridge -h rl8 -it --rm rockylinux:8
+$ sudo -i docker run -v ${PWD}/tool:/tool -v ${PWD}/output:/output --net=bridge -h rl8 -it --rm rockylinux:8
 ```
 
 ```sh
@@ -28,7 +29,11 @@ $ sudo -i docker run --net=bridge -h rl8 -it --rm rockylinux:8
   done \
   | xargs -L 100 dnf install -y \
   && rpm -Uvh "google-chrome-stable_${ver}_x86_64.rpm"
+[rl8]#
+[rl8]# /tool/headless-chrome -o /output/go.html -w 640,480 -s /output/go.png -l https://nettv.gov-online.go.jp/
+[rl8]# file /output/*
+/output/go.html: HTML document, UTF-8 Unicode text, with very long lines
+/output/go.png:  PNG image data, 640 x 480, 8-bit/color RGBA, non-interlaced
 ```
 
 pip3 install chromedriver-binary はピッタリバージョンが無くて失敗することもよくあるので、その場合は存在する近しいバージョンをテキトーに指定する
-
