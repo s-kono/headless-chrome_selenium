@@ -99,9 +99,10 @@ def main(args):
         driver.set_page_load_timeout(timeout)
         driver.get(urlparse(args.url).scheme + '://' + str(urlparse(args.url).hostname) + '/')
         time.sleep(1)
-        driver.delete_all_cookies()
-        for cookie in cookies_list:
-            driver.add_cookie(cookie)
+        if len(cookies_list) > 0:
+            driver.delete_all_cookies()
+            for cookie in cookies_list:
+                driver.add_cookie(cookie)
     except InvalidCookieDomainException as e:
         eprint(args.erroroutput, e)
         if driver.current_url != args.url:
