@@ -2,7 +2,7 @@
 
 * pip3 install chromedriver-binary はピッタリバージョンが無くて失敗することもよくある
   * その場合は、存在する近しいバージョンをテキトーに指定
-  * (最初からバージョン無指定でも問題無いのかも)
+  * (そもそも、バージョン無指定でも良いのかも)
 
 #### Rocky Linux 版
 
@@ -11,6 +11,8 @@ $ sudo docker run -v ${PWD}/tool:/tool -v ${PWD}/output:/output -v /dev/shm:/dev
   --net=bridge -h docker -it --rm rockylinux:8
 
 [docker]# dnf install -y python3 https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm \
+  https://pkgs.dyn.su/el8/base/x86_64/ipa-gothic-fonts-003.03-15.el8.noarch.rpm \
+  https://pkgs.dyn.su/el8/base/x86_64/ipa-pgothic-fonts-003.03-14.el8.noarch.rpm \
   && pip3 install selenium \
   && pip3 install chromedriver-binary=="$( rpm -q google-chrome-stable | awk -F- '{print $4}' )"
 ```
@@ -22,7 +24,7 @@ $ sudo docker run -v ${PWD}/tool:/tool -v ${PWD}/output:/output -v /dev/shm:/dev
   --net=bridge -h docker -it --rm ubuntu:20.04
 
 [docker]# apt update \
-  && apt install -y curl python3-pip \
+  && apt install -y curl python3-pip fonts-ipafont-gothic fonts-ipafont-mincho \
   && curl https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O \
   && ( dpkg -i google-chrome-stable_current_amd64.deb || apt --fix-broken install -y ) \
   && pip3 install selenium \
