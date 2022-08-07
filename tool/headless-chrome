@@ -24,7 +24,8 @@ def parser():
     parser.add_argument('-a', '--pauth', help='Proxy Auth', required=False)
     parser.add_argument('-e', '--erroroutput', help='Error Output', required=False)
     parser.add_argument('-t', '--timeout', help='Timeout', required=False)
-    parser.add_argument('-c', '--cachedir', help='Cache Dir', required=False)
+    parser.add_argument('-d', '--cachedir', help='Cache Dir', required=False)
+    parser.add_argument('-c', '--cookie', action='store_true', help='cookie flag', required=False)
     parser.add_argument('-w', '--windowsize', help='WindowSize', required=False)
     parser.add_argument('-r', '--resize', help='WindowResize', required=False)
     parser.add_argument('-s', '--screenshot', help='ScreenShot', required=False)
@@ -96,49 +97,40 @@ def main(args):
 
     try:
         driver = webdriver.Chrome(options=options)
-        driver.set_page_load_timeout(timeout)
-        driver.get(urlparse(args.url).scheme + '://' + str(urlparse(args.url).hostname) + '/')
-        time.sleep(1)
-        if len(cookies_list) > 0:
-            driver.delete_all_cookies()
-            for cookie in cookies_list:
-                driver.add_cookie(cookie)
-    except InvalidCookieDomainException as e:
-        eprint(args.erroroutput, e)
-        if driver.current_url != args.url:
-            eprint(args.erroroutput, 'redirect(InvalidCookieDomain): ' + args.url + ' => ' + driver.current_url)
-        driver.quit()
-        sys.exit(1)
-    except TimeoutException:
-        pass
     except Exception as e:
         eprint(args.erroroutput, e)
         driver.quit()
         sys.exit(1)
+
+    if args.cookie:
+        try:
+            driver.set_page_load_timeout(timeout)
+            driver.get(urlparse(args.url).scheme + '://' + str(urlparse(args.url).netloc) + '/')
+            time.sleep(1)
+            if len(cookies_list) > 0:
+                driver.delete_all_cookies()
+                for cookie in cookies_list:
+                    driver.add_cookie(cookie)
+        except InvalidCookieDomainException as e:
+            eprint(args.erroroutput, e)
+            if driver.current_url != args.url:
+                eprint(args.erroroutput, 'redirect(InvalidCookieDomain): ' + args.url + ' => ' + driver.current_url)
+            driver.quit()
+            sys.exit(1)
+        except TimeoutException:
+            pass
+        except Exception as e:
+            eprint(args.erroroutput, e)
+            driver.quit()
+            sys.exit(1)
 
     try:
         driver.set_page_load_timeout(timeout)
         # driver.refresh()
         driver.get(args.url)
         time.sleep(3)
-    except TimeoutException as e:
-        eprint(args.erroroutput, e, True)
-        pass
-    except Exception as e:
-        eprint(args.erroroutput, e)
-        driver.quit()
-        sys.exit(1)
-
-    try:
-        if args.windowsize is None:
-            page_width = driver.execute_script('return document.body.scrollWidth')
-            page_height = driver.execute_script('return document.body.scrollHeight')
-            driver.set_window_size(page_width, page_height)
-        if args.resize is not None:
-            page_width = driver.execute_script('return document.body.scrollWidth')
-            page_height = driver.execute_script('return document.body.scrollHeight')
-            driver.set_window_size(page_width, page_height - int(args.resize))
-    # except InvalidArgumentException as e:
+    # except TimeoutException as e:
+    #     eprint(args.erroroutput, e, True)
     except Exception as e:
         eprint(args.erroroutput, e)
         driver.quit()
@@ -151,19 +143,37 @@ def main(args):
         else:
             with open(args.output, "w") as f:
                 f.write(driver.page_source)
-        if args.screenshot is not None:
-            driver.save_screenshot(args.screenshot)
+        if not driver.current_url == args.url:
+            eprint(args.erroroutput, 'redirect: ' + args.url + ' => ' + driver.current_url)
     except Exception as e:
         eprint(args.erroroutput, e)
         driver.quit()
         sys.exit(1)
 
-    if driver.current_url == args.url:
-        cookies_list = driver.get_cookies()
-        with open(cookie_path, 'w') as file_path:
-            json.dump(cookies_list, file_path, indent=2, sort_keys=True)
-    else:
-        eprint(args.erroroutput, 'redirect: ' + args.url + ' => ' + driver.current_url)
+    if args.screenshot is not None:
+        try:
+            if args.windowsize is None:
+                page_width = driver.execute_script('return document.body.scrollWidth')
+                page_height = driver.execute_script('return document.body.scrollHeight')
+                driver.set_window_size(page_width, page_height)
+            if args.resize is not None:
+                page_width = driver.execute_script('return document.body.scrollWidth')
+                page_height = driver.execute_script('return document.body.scrollHeight')
+                driver.set_window_size(page_width, page_height - int(args.resize))
+            driver.save_screenshot(args.screenshot)
+        except Exception as e:
+            eprint(args.erroroutput, e)
+            driver.quit()
+            sys.exit(1)
+
+    if args.cookie:
+        if urlparse(driver.current_url).netloc == urlparse(args.url).netloc:
+            cookies_list = driver.get_cookies()
+            try:
+                with open(cookie_path, 'w') as file_path:
+                    json.dump(cookies_list, file_path, indent=2, sort_keys=True)
+            except Exception as e:
+                eprint(args.erroroutput, e)
 
     driver.quit()
 
