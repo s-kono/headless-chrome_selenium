@@ -1,0 +1,17 @@
+version: '3.3'
+services:
+  rockylinux:
+    image: 'rockylinux:8'
+    volumes:
+      - '$PWD/tool:/tool'
+      - '$PWD/output:/output'
+      - '/dev/shm:/dev/shm'
+    network_mode: bridge
+    container_name: headless-chrome_selenium
+    logging:
+      driver: json-file
+      options:
+        max-size: 1m
+        max-file: '7'
+    environment:
+      - TZ=Asia/Tokyo
